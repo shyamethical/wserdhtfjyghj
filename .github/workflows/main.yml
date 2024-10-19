@@ -1,0 +1,36 @@
+name: Cl
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest  # Ubuntu base pe Kali install kar rahe hain
+
+    steps:
+    - name: Install Kali Linux
+      run: |
+        sudo apt update
+        sudo apt install -y kali-desktop-xfce xrdp kali-linux-default
+        sudo systemctl enable xrdp
+        sudo systemctl start xrdp
+
+    - name: Download ngrok
+      run: wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.zip -O ngrok.zip
+
+    - name: Extract ngrok
+      run: unzip ngrok.zip
+
+    - name: Auth ngrok
+      run: ./ngrok authtoken $NGROK_AUTH_TOKEN
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+
+    - name: Allow RDP through firewall
+      run: sudo ufw allow 3389/tcp
+
+    - name: Set Password for root
+      run: echo "root:P@ssw0rd!" | sudo chpasswd
+
+    - name: Create Tunnel
+      run: ./ngrok tcp 3389
